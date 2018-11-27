@@ -30,7 +30,7 @@ See https://github.com/adobe-type-tools/cmap-resources
 <!--#if GENERIC-->
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <!--#endif-->
-    <title>PDF.js viewer</title>
+    <title>文档阅读器</title>
 
 <!--#if FIREFOX || MOZCENTRAL-->
 <!--#include viewer-snippet-firefox-extension.html-->
@@ -62,6 +62,27 @@ See https://github.com/adobe-type-tools/cmap-resources
   </head>
 
   <body tabindex="1" class="loadingInProgress">
+    <div id="load_img">
+      <div class="load_center">
+        <div class="load_header" id="load_header">正在提取您的文件...</div>
+        <div class="load_text" id="load_text">正在从 Internet 上的主页中检索您的文件，请稍候</div>
+       <!-- Loading image --> 
+        <span role="presentation" align="absmiddle" class="BootSpinner"></span> 
+      </div>
+    </div>
+
+     <div id="errorWrapper" hidden='true'>
+      <div class="error_center">
+        <div class="error_header" id="errorMessage">出错了</div>
+        <div class="error_text" id="load_text">
+          <button hidden='true' id="errorShowMore" data-l10n-id="error_more_info">
+              刷新页面
+          </button> 
+        </div>
+      </div>
+       
+    </div>
+
     <div id="outerContainer">
 
       <div id="mainContainer">
@@ -72,24 +93,25 @@ See https://github.com/adobe-type-tools/cmap-resources
               <div id="toolbarViewerLeft">
                 <div class="splitToolbarButton hiddenSmallView">
                   <button class="toolbarButton pageUp" title="Previous Page" id="previous" tabindex="13" data-l10n-id="previous">
-                    <span data-l10n-id="previous_label">Previous</span>
+                    <span data-l10n-id="previous_label">上一页</span>
                   </button>
                   <div class="splitToolbarButtonSeparator"></div>
                   <button class="toolbarButton pageDown" title="Next Page" id="next" tabindex="14" data-l10n-id="next">
-                    <span data-l10n-id="next_label">Next</span>
+                    <span data-l10n-id="next_label">下一页</span>
                   </button>
                 </div>
-                <input type="number" id="pageNumber" class="toolbarField pageNumber" title="Page" value="1" size="4" min="1" tabindex="15" data-l10n-id="page">
+
+                <span id="pageNumber" class="pageNumber"></span>
                 <span id="numPages" class="toolbarLabel"></span>
               </div>
               <div id="toolbarViewerMiddle">
                 <div class="splitToolbarButton">
                   <button id="zoomOut" class="toolbarButton zoomOut" title="Zoom Out" tabindex="21" data-l10n-id="zoom_out">
-                    <span data-l10n-id="zoom_out_label">Zoom Out</span>
+                    <span data-l10n-id="zoom_out_label">放大</span>
                   </button>
                   <div class="splitToolbarButtonSeparator"></div>
                   <button id="zoomIn" class="toolbarButton zoomIn" title="Zoom In" tabindex="22" data-l10n-id="zoom_in">
-                    <span data-l10n-id="zoom_in_label">Zoom In</span>
+                    <span data-l10n-id="zoom_in_label">缩小</span>
                    </button>
                 </div>
               </div>
@@ -103,53 +125,25 @@ See https://github.com/adobe-type-tools/cmap-resources
           </div>
         </div>
 
-        <menu type="context" id="viewerContextMenu">
-          <menuitem id="contextFirstPage" label="First Page"
-                    data-l10n-id="first_page"></menuitem>
-          <menuitem id="contextLastPage" label="Last Page"
-                    data-l10n-id="last_page"></menuitem>
-          <menuitem id="contextPageRotateCw" label="Rotate Clockwise"
-                    data-l10n-id="page_rotate_cw"></menuitem>
-          <menuitem id="contextPageRotateCcw" label="Rotate Counter-Clockwise"
-                    data-l10n-id="page_rotate_ccw"></menuitem>
-        </menu>
 
         <div id="viewerContainer" tabindex="0">
           <div id="viewer" class="pdfViewer"></div>
         </div>
 
-        <div id="errorWrapper" hidden='true'>
-          <div id="errorMessageLeft">
-            <span id="errorMessage"></span>
-            <button id="errorShowMore" data-l10n-id="error_more_info">
-              More Information
-            </button>
-            <button id="errorShowLess" data-l10n-id="error_less_info" hidden='true'>
-              Less Information
-            </button>
-          </div>
-          <div id="errorMessageRight">
-            <button id="errorClose" data-l10n-id="error_close">
-              Close
-            </button>
-          </div>
-          <div class="clearBoth"></div>
-          <textarea id="errorMoreInfo" hidden='true' readonly="readonly"></textarea>
-        </div>
       </div> <!-- mainContainer -->
 
       <div id="overlayContainer" class="hidden">
         <div id="passwordOverlay" class="container hidden">
           <div class="dialog">
             <div class="row">
-              <p id="passwordText" data-l10n-id="password_label">Enter the password to open this PDF file:</p>
+              <p id="passwordText" data-l10n-id="password_label">输入文档密码:</p>
             </div>
             <div class="row">
               <input type="password" id="password" class="toolbarField">
             </div>
             <div class="buttonRow">
-              <button id="passwordCancel" class="overlayButton"><span data-l10n-id="password_cancel">Cancel</span></button>
-              <button id="passwordSubmit" class="overlayButton"><span data-l10n-id="password_ok">OK</span></button>
+              <button id="passwordCancel" class="overlayButton"><span data-l10n-id="password_cancel">取消</span></button>
+              <button id="passwordSubmit" class="overlayButton"><span data-l10n-id="password_ok">确定</span></button>
             </div>
           </div>
         </div>

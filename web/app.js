@@ -286,6 +286,7 @@ let PDFViewerApplication = {
 
     const container = appConfig.mainContainer;
     const viewer = appConfig.viewerContainer;
+    console.log('textLayerMode', AppOptions.get('textLayerMode'));
     this.pdfViewer = new PDFViewer({
       container,
       viewer,
@@ -333,6 +334,10 @@ let PDFViewerApplication = {
     this.passwordPrompt = new PasswordPrompt(appConfig.passwordOverlay,
                                              this.overlayManager, this.l10n);
 
+  },
+
+  openFile() {
+    webViewerInitialized();
   },
 
   run(config) {
@@ -486,6 +491,9 @@ let PDFViewerApplication = {
   async close() {
     let errorWrapper = this.appConfig.errorWrapper.container;
     errorWrapper.setAttribute('hidden', 'true');
+
+    let loadingWrapper = this.appConfig.loadingWrapper.container;
+    loadingWrapper.setAttribute('hidden', 'true');
 
     if (!this.pdfLoadingTask) {
       return;
@@ -696,6 +704,10 @@ let PDFViewerApplication = {
 
     if (typeof PDFJSDev === 'undefined' ||
         !PDFJSDev.test('FIREFOX || MOZCENTRAL')) {
+
+      let loadingWrapper = this.appConfig.loadingWrapper.container;
+      loadingWrapper.setAttribute('hidden', 'true');
+
       let errorWrapperConfig = this.appConfig.errorWrapper;
       let errorWrapper = errorWrapperConfig.container;
       errorWrapper.removeAttribute('hidden');
@@ -782,6 +794,9 @@ let PDFViewerApplication = {
     pdfDocument.getDownloadInfo().then(() => {
       this.downloadComplete = true;
       this.loadingBar.hide();
+
+      let loadingWrapper = this.appConfig.loadingWrapper.container;
+      loadingWrapper.setAttribute('hidden', 'true');
 
       firstPagePromise.then(() => {
         this.eventBus.dispatch('documentloaded', { source: this, });
@@ -1387,54 +1402,6 @@ function webViewerInitialized() {
     file = AppOptions.get('defaultUrl');
   }
 
-  if (typeof PDFJSDev === 'undefined' || PDFJSDev.test('GENERIC')) {
-    let fileInput = document.createElement('input');
-    fileInput.id = appConfig.openFileInputName;
-    fileInput.className = 'fileInput';
-    fileInput.setAttribute('type', 'file');
-    fileInput.oncontextmenu = noContextMenuHandler;
-    document.body.appendChild(fileInput);
-
-    if (!window.File || !window.FileReader ||
-        !window.FileList || !window.Blob) {
-      appConfig.toolbar.openFile.setAttribute('hidden', 'true');
-    } else {
-      fileInput.value = null;
-    }
-
-    fileInput.addEventListener('change', function(evt) {
-      let files = evt.target.files;
-      if (!files || files.length === 0) {
-        return;
-      }
-      PDFViewerApplication.eventBus.dispatch('fileinputchange', {
-        source: this,
-        fileInput: evt.target,
-      });
-    });
-
-    // Enable draging-and-dropping a new PDF file onto the viewerContainer.
-    appConfig.mainContainer.addEventListener('dragover', function(evt) {
-      evt.preventDefault();
-
-      evt.dataTransfer.dropEffect = 'move';
-    });
-    appConfig.mainContainer.addEventListener('drop', function(evt) {
-      evt.preventDefault();
-
-      const files = evt.dataTransfer.files;
-      if (!files || files.length === 0) {
-        return;
-      }
-      PDFViewerApplication.eventBus.dispatch('fileinputchange', {
-        source: this,
-        fileInput: evt.dataTransfer,
-      });
-    });
-  } else {
-    appConfig.toolbar.openFile.setAttribute('hidden', 'true');
-  }
-
   if (typeof PDFJSDev !== 'undefined' &&
       PDFJSDev.test('FIREFOX || MOZCENTRAL') &&
       !PDFViewerApplication.supportsDocumentFonts) {
@@ -1444,10 +1411,6 @@ function webViewerInitialized() {
         then((msg) => {
       console.warn(msg);
     });
-  }
-
-  if (PDFViewerApplication.supportsIntegratedFind) {
-    appConfig.toolbar.viewFind.classList.add('hidden');
   }
 
   appConfig.mainContainer.addEventListener('transitionend', function(evt) {

@@ -36,6 +36,14 @@ if (typeof PDFJSDev !== 'undefined' && PDFJSDev.test('CHROME')) {
 }
 
 let pdfjsWebApp, pdfjsWebAppOptions;
+let FILE_LOADED = false;
+let VIEW_READY = false;
+// let API_URL = 'https://wfyfgxcx.jsfy.gov.cn/wecourt-outer-judge/judge/api/gw/getFileUrl';
+let API_URL = '/apis/wecourt-outer-judge/judge/api/gw/getFileUrl';
+let FILE_URL = '';
+let SESSION_KEY = '';
+let sendData = {};
+
 if (typeof PDFJSDev !== 'undefined' && PDFJSDev.test('PRODUCTION')) {
   pdfjsWebApp = require('./app.js');
   pdfjsWebAppOptions = require('./app_options.js');
@@ -65,9 +73,9 @@ function getViewerConfiguration() {
       container: document.getElementById('toolbarViewer'),
       numPages: document.getElementById('numPages'),
       pageNumber: document.getElementById('pageNumber'),
-      scaleSelectContainer: document.getElementById('scaleSelectContainer'),
-      scaleSelect: document.getElementById('scaleSelect'),
-      customScaleOption: document.getElementById('customScaleOption'),
+      scaleSelectContainer: null,
+      scaleSelect: null,
+      customScaleOption: null,
       previous: document.getElementById('previous'),
       next: document.getElementById('next'),
       zoomIn: document.getElementById('zoomIn'),
@@ -177,14 +185,116 @@ function getViewerConfiguration() {
       moreInfoButton: document.getElementById('errorShowMore'),
       lessInfoButton: document.getElementById('errorShowLess'),
     },
+    loadingWrapper: {
+      container: document.getElementById('load_img'),
+      loadHeader: document.getElementById('load_header'),
+      loadText: document.getElementById('load_text'),
+    },
     printContainer: document.getElementById('printContainer'),
     openFileInputName: 'fileInput',
     debuggerScriptPath: './debugger.js',
   };
 }
 
+function parseQueryString(query) {
+  let parts = query.split('&');
+  let params = Object.create(null);
+
+  for (let i = 0, ii = parts.length; i < ii; ++i) {
+    let param = parts[i].split('=');
+    let key = param[0].toLowerCase();
+    let value = param.length > 1 ? param[1] : null;
+    params[decodeURIComponent(key)] = decodeURIComponent(value);
+  }
+
+  return params;
+}
+
+function openFile() {
+  window.PDFViewerApplicationOptions.set('defaultUrl', FILE_URL);
+  document.getElementById('load_header').textContent = '正在打开文件';
+  document.getElementById('load_text').textContent = '正在打开文件,请稍后...';
+  window.PDFViewerApplication.openFile();
+}
+
+function showError(config, message) {
+  console.error(message);
+  let errorWrapperConfig = config.errorWrapper;
+  let errorWrapper = errorWrapperConfig.container;
+  errorWrapper.removeAttribute('hidden');
+
+  let errorMessage = errorWrapperConfig.errorMessage;
+  errorMessage.textContent = message;
+
+  let loadingWrapper = config.loadingWrapper.container;
+  loadingWrapper.setAttribute('hidden', 'true');
+
+}
+
+function validateUrl(config) {
+  let query = document.location.search.substring(1);
+  let param = (0, parseQueryString)(query);
+
+  console.log(query);
+  if (!('id' in param)) {
+    showError(config, '参数 id 不能为空');
+    return false;
+  }
+  if (!('fjid' in param)) {
+    showError(config, '参数 fjid 不能为空');
+    return false;
+  }
+  if (!('fjmm' in param)) {
+    showError(config, '参数 fjmm 不能为空');
+    return false;
+  }
+  if (!('bt' in param)) {
+    showError(config, '参数 bt 不能为空');
+    return false;
+  }
+  if (!('ftpf' in param)) {
+    showError(config, '参数 ftpf 不能为空');
+    return false;
+  }
+  if (!('key' in param)) {
+    showError(config, '参数 key 不能为空');
+    return false;
+  }
+  SESSION_KEY = param.key;
+  sendData = query;
+  return true;
+}
 function webViewerLoad() {
   let config = getViewerConfiguration();
+  if (!validateUrl(config)) {
+    return;
+  }
+
+  fileLoad().then(function(data) {
+    console.log(data);
+    if (data.code === 0) {
+      FILE_LOADED = true;
+      FILE_URL = data.data.replace('https://wfy-oss.oss-cn-hangzhou.aliyuncs.com', 'http://localhost:8888/files');
+      if (VIEW_READY) {
+        openFile();
+      }
+    } else if (data.code === 404) {
+      showError(config, '连接不存在');
+    } else {
+      let message = data.message;
+      showError(config, message);
+    }
+
+    console.log('fileLoaded', data);
+}
+  ).catch(function(error) {
+    showError(config, error.message);
+    console.error('error', error.message);
+  });
+
+  console.log('加载资源...');
+  console.time('加载资源耗时');
+
   if (typeof PDFJSDev === 'undefined' || !PDFJSDev.test('PRODUCTION')) {
     Promise.all([
       SystemJS.import('pdfjs-web/app'),
@@ -192,9 +302,21 @@ function webViewerLoad() {
       SystemJS.import('pdfjs-web/genericcom'),
       SystemJS.import('pdfjs-web/pdf_print_service'),
     ]).then(function([app, appOptions, ...otherModules]) {
+      console.log('加载资源完成');
+      console.timeEnd('加载资源耗时');
+      console.log('启动阅读器...');
+      console.time('启动阅读器');
       window.PDFViewerApplication = app.PDFViewerApplication;
       window.PDFViewerApplicationOptions = appOptions.AppOptions;
-      app.PDFViewerApplication.run(config);
+      app.PDFViewerApplication.initialize(config).then(function() {
+        VIEW_READY = true;
+        if (FILE_LOADED) {
+          openFile();
+        }
+      });
+      // app.PDFViewerApplication.run(config);
+      console.log('启动阅读器完成');
+      console.timeEnd('启动阅读器');
     });
   } else {
     if (typeof PDFJSDev !== 'undefined' && PDFJSDev.test('CHROME')) {
@@ -205,6 +327,67 @@ function webViewerLoad() {
     window.PDFViewerApplicationOptions = pdfjsWebAppOptions.AppOptions;
     pdfjsWebApp.PDFViewerApplication.run(config);
   }
+}
+
+ async function request(url, data) {
+  return new Promise((resolve, reject) => {
+    let xhr = new XMLHttpRequest();
+    // 使用HTTP POST请求与服务器交互数据
+    xhr.open('POST', url, true);
+    // 设置发送数据的请求格式
+    xhr.setRequestHeader('content-type',
+    'application/x-www-form-urlencoded;charset=UTF-8');
+    xhr.setRequestHeader('sessionKey', SESSION_KEY);
+    xhr.onerror = function (error) {
+      console.log('xhr onerror', error);
+      reject(error);
+    };
+    xhr.ontimeout = function() {
+      console.log('xhr timeout');
+      let error = { code: 300, message: '连接超时', };
+      reject(error);
+    };
+    xhr.onreadystatechange = function() {
+      console.log('readyStateChanged', xhr.readyState);
+        if (xhr.readyState === 4) {
+          console.log('responseText', xhr.responseText);
+          console.log('status', xhr.status);
+          let code = xhr.status;
+          if (code === 200) {
+            // 根据服务器的响应内容格式处理响应结果
+            let contentType = xhr.getResponseHeader('content-type');
+            if (contentType &&
+              contentType.indexOf('application/json') > -1) {
+              let result = JSON.parse(xhr.responseText);
+              resolve(result);
+            } else {
+              resolve(xhr.responseText);
+            }
+          } else {
+            let error = { code, message: '状态错误', };
+            reject(error);
+          }
+        }
+    };
+    // 将用户输入值序列化成字符串
+    xhr.send(JSON.stringify(data));
+  });
+
+}
+
+async function fileLoad() {
+  console.log('开始请求接口');
+  console.time('请求网络');
+  return new Promise((resolve, reject) => {
+    request(API_URL, sendData).then(function(data) {
+      resolve(data);
+      console.timeEnd('请求网络');
+    }).catch(function(error) {
+      reject(error);
+      console.timeEnd('请求网络');
+    });
+  });
+
 }
 
 if (document.readyState === 'interactive' ||

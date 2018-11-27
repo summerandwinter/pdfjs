@@ -136,6 +136,8 @@ class BaseViewer {
     if (this.constructor === BaseViewer) {
       throw new Error('Cannot initialize BaseViewer.');
     }
+    console.log('textLayerMode2', Number.isInteger(options.textLayerMode) ?
+      options.textLayerMode : TextLayerMode.ENABLE)
     this._name = this.constructor.name;
 
     this.container = options.container;

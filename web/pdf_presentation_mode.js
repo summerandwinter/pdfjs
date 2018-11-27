@@ -57,24 +57,6 @@ class PDFPresentationMode {
     this.mouseScrollDelta = 0;
     this.touchSwipeState = null;
 
-    if (contextMenuItems) {
-      contextMenuItems.contextFirstPage.addEventListener('click', () => {
-        this.contextMenuOpen = false;
-        this.eventBus.dispatch('firstpage', { source: this, });
-      });
-      contextMenuItems.contextLastPage.addEventListener('click', () => {
-        this.contextMenuOpen = false;
-        this.eventBus.dispatch('lastpage', { source: this, });
-      });
-      contextMenuItems.contextPageRotateCw.addEventListener('click', () => {
-        this.contextMenuOpen = false;
-        this.eventBus.dispatch('rotatecw', { source: this, });
-      });
-      contextMenuItems.contextPageRotateCcw.addEventListener('click', () => {
-        this.contextMenuOpen = false;
-        this.eventBus.dispatch('rotateccw', { source: this, });
-      });
-    }
   }
 
   /**
@@ -237,7 +219,6 @@ class PDFPresentationMode {
     this._addWindowListeners();
     this._showControls();
     this.contextMenuOpen = false;
-    this.container.setAttribute('contextmenu', 'viewerContextMenu');
 
     // Text selection is disabled in Presentation Mode, thus it's not possible
     // for the user to deselect text that is selected (e.g. with "Select all")
@@ -267,7 +248,6 @@ class PDFPresentationMode {
     this._removeWindowListeners();
     this._hideControls();
     this._resetMouseScrollState();
-    this.container.removeAttribute('contextmenu');
     this.contextMenuOpen = false;
   }
 
@@ -416,7 +396,6 @@ class PDFPresentationMode {
     window.addEventListener('mousedown', this.mouseDownBind);
     window.addEventListener('wheel', this.mouseWheelBind);
     window.addEventListener('keydown', this.resetMouseScrollStateBind);
-    window.addEventListener('contextmenu', this.contextMenuBind);
     window.addEventListener('touchstart', this.touchSwipeBind);
     window.addEventListener('touchmove', this.touchSwipeBind);
     window.addEventListener('touchend', this.touchSwipeBind);
@@ -430,7 +409,6 @@ class PDFPresentationMode {
     window.removeEventListener('mousedown', this.mouseDownBind);
     window.removeEventListener('wheel', this.mouseWheelBind);
     window.removeEventListener('keydown', this.resetMouseScrollStateBind);
-    window.removeEventListener('contextmenu', this.contextMenuBind);
     window.removeEventListener('touchstart', this.touchSwipeBind);
     window.removeEventListener('touchmove', this.touchSwipeBind);
     window.removeEventListener('touchend', this.touchSwipeBind);

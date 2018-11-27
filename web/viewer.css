@@ -34,7 +34,7 @@ html {
 body {
   height: 100%;
   width: 100%;
-  background-color: #404040;
+  background-color: #ffffff;
   background-image: url(images/texture.png);
 }
 
@@ -53,13 +53,120 @@ select {
   display: none !important;
 }
 
-#viewerContainer.pdfPresentationMode:-ms-fullscreen {
-  top: 0px !important;
-  overflow: hidden !important;
+#load_img {
+    width: 100%;
+    height: 100%;
+    position: fixed;
+    text-align: center;
+    z-index: 50001;
+    background-color: #ffffff;
+    background-image: url(images/texture.png);
+}
+.load_center {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 50%;
+}
+.load_header {
+    font-family: calibri, tahoma, verdana, arial, sans serif;
+    font-size: 18pt;
+    color: #444444;
+    line-height: 150%;
 }
 
-#viewerContainer.pdfPresentationMode:-ms-fullscreen::-ms-backdrop {
-  background-color: #000;
+.load_text {
+    font-family: calibri, tahoma, verdana, arial, sans serif;
+    font-size: 10pt;
+    color: #444444;
+}
+#load_img span {
+    position: relative;
+}
+.load_logo_xls {
+    display: inline-block;
+    width: 153px;
+    height: 32px;
+    background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJkAAAAgCAMAAAA2Ryo1AAAAUVBMV…7kRECkfTlGBskdlAuhBH/nP8eOH7UU8FwPWfqRaTbNptkGdOV6gvVPG6EAAAAASUVORK5CYII=);
+}
+.BootSpinner {
+    position: relative;
+    display: inline-block;
+    margin: 25px auto;
+    width: 40px;
+    height: 40px;
+    border: 1.5px solid #d9d9d9;
+    border-top-color: #217346;
+    z-index: 1051;
+    border-radius: 50%;
+    -ms-border-radius: 50%;
+    -webkit-border-radius: 50%;
+    -moz-border-radius: 50%;
+    animation-delay: 0s;
+    -ms-animation-delay: 0s;
+    -webkit-animation-delay: 0s;
+    -moz-animation-delay: 0s;
+    animation-direction: normal;
+    -ms-animation-direction: normal;
+    -webkit-animation-direction: normal;
+    -moz-animation-direction: normal;
+    animation-duration: 1.3s;
+    -ms-animation-duration: 1.3s;
+    -webkit-animation-duration: 1.3s;
+    -moz-animation-duration: 1.3s;
+    animation-fill-mode: none;
+    -ms-animation-fill-mode: none;
+    -webkit-animation-fill-mode: none;
+    -moz-animation-fill-mode: none;
+    animation-name: ms-Spinner-spin;
+    -ms-animation-name: ms-Spinner-spin;
+    -webkit-animation-name: ms-Spinner-spin;
+    -moz-animation-name: ms-Spinner-spin;
+    animation-iteration-count: infinite;
+    -ms-animation-iteration-count: infinite;
+    -webkit-animation-iteration-count: infinite;
+    -moz-animation-iteration-count: infinite;
+    animation-timing-function: cubic-bezier(.53,.21,.29,.67);
+    -ms-animation-timing-function: cubic-bezier(.53,.21,.29,.67);
+    -webkit-animation-timing-function: cubic-bezier(.53,.21,.29,.67);
+    -moz-animation-timing-function: cubic-bezier(.53,.21,.29,.67);
+}
+@-webkit-keyframes ms-Spinner-spin{from{transform:rotate(0);-ms-transform:rotate(0);-webkit-transform:rotate(0);-moz-transform:rotate(0)}to{transform:rotate(360deg);-ms-transform:rotate(360deg);-webkit-transform:rotate(360deg);-moz-transform:rotate(360deg)}}@keyframes ms-Spinner-spin{from{transform:rotate(0);-ms-transform:rotate(0);-webkit-transform:rotate(0);-moz-transform:rotate(0)}to{transform:rotate(360deg);-ms-transform:rotate(360deg);-webkit-transform:rotate(360deg);-moz-transform:rotate(360deg)}}
+#load_img img {
+    position: relative;
+}
+
+.load_center img {
+    margin: 5px;
+}
+#errorWrapper {
+    width: 100%;
+    height: 100%;
+    position: fixed;
+    text-align: center;
+    z-index: 50001;
+    background-color: #ffffff;
+    background-image: url(images/texture.png);
+}
+
+
+.error_center {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 50%;
+}
+.error_header {
+    font-family: calibri, tahoma, verdana, arial, sans serif;
+    font-size: 18pt;
+    color: #444444;
+    line-height: 150%;
+}
+
+.error_text {
+    font-family: calibri, tahoma, verdana, arial, sans serif;
+    font-size: 10pt;
+    color: #444444;
 }
 
 #viewerContainer.pdfPresentationMode:fullscreen {
@@ -1092,6 +1199,18 @@ html[dir='rtl'] .verticalToolbarSeparator {
   user-select: none;
   cursor: default;
 }
+.pageNumber {
+  padding: 3px 0px 3px 2px;
+  margin: 4px 0px 4px 0;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  color: hsl(0,0%,85%);
+  font-size: 12px;
+  line-height: 14px;
+  text-align: left;
+  user-select: none;
+  cursor: default;
+}
 
 #thumbnailView {
   position: absolute;
@@ -1309,35 +1428,7 @@ html[dir='rtl'] .outlineItemToggler::before {
    see https://bugzilla.mozilla.org/show_bug.cgi?id=706209 */
 ::selection { background: rgba(0,0,255,0.3); }
 
-#errorWrapper {
-  background: none repeat scroll 0 0 #FF5555;
-  color: white;
-  left: 0;
-  position: absolute;
-  right: 0;
-  z-index: 1000;
-  padding: 3px;
-  font-size: 0.8em;
-}
-.loadingInProgress #errorWrapper {
-  top: 37px;
-}
 
-#errorMessageLeft {
-  float: left;
-}
-
-#errorMessageRight {
-  float: right;
-}
-
-#errorMoreInfo {
-  background-color: #FFFFFF;
-  color: black;
-  padding: 3px;
-  margin: 3px;
-  width: 98%;
-}
 
 .overlayButton {
   width: auto;

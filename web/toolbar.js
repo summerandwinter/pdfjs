@@ -14,13 +14,9 @@
  */
 
 import {
-  animationStarted, DEFAULT_SCALE, DEFAULT_SCALE_VALUE, MAX_SCALE,
-  MIN_SCALE, noContextMenuHandler, NullL10n
+  DEFAULT_SCALE, DEFAULT_SCALE_VALUE, MAX_SCALE,
+  MIN_SCALE, NullL10n
 } from './ui_utils';
-
-const PAGE_NUMBER_LOADING_INDICATOR = 'visiblePageIsLoading';
-const SCALE_SELECT_CONTAINER_PADDING = 8;
-const SCALE_SELECT_PADDING = 22;
 
 /**
  * @typedef {Object} ToolbarOptions
@@ -113,17 +109,6 @@ class Toolbar {
       eventBus.dispatch('zoomout', { source: self, });
     });
 
-    items.pageNumber.addEventListener('click', function() {
-      this.select();
-    });
-
-    items.pageNumber.addEventListener('change', function() {
-      eventBus.dispatch('pagenumberchanged', {
-        source: self,
-        value: this.value,
-      });
-    });
-
     // items.presentationModeButton.addEventListener('click', function() {
     //   eventBus.dispatch('presentationmode', { source: self, });
     // });
@@ -155,7 +140,7 @@ class Toolbar {
       // Don't update the UI state until we localize the toolbar.
       return;
     }
-    const { pageNumber, pagesCount, pageScaleValue, pageScale, items, } = this;
+    const { pageNumber, pagesCount, pageScale, items, } = this;
 
     if (resetNumPages) {
       if (this.hasPageLabels) {
@@ -171,13 +156,13 @@ class Toolbar {
     }
 
     if (this.hasPageLabels) {
-      items.pageNumber.value = this.pageLabel;
+      items.pageNumber.textContent = this.pageLabel;
       this.l10n.get('page_of_pages', { pageNumber, pagesCount, },
                     '({{pageNumber}} of {{pagesCount}})').then((msg) => {
         items.numPages.textContent = msg;
       });
     } else {
-      items.pageNumber.value = pageNumber;
+      items.pageNumber.textContent = pageNumber;
     }
 
     items.previous.disabled = (pageNumber <= 1);
@@ -189,9 +174,7 @@ class Toolbar {
   }
 
   updateLoadingIndicatorState(loading = false) {
-    let pageNumberInput = this.items.pageNumber;
 
-    pageNumberInput.classList.toggle(PAGE_NUMBER_LOADING_INDICATOR, loading);
   }
 }
 
