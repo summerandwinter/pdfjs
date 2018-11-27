@@ -131,7 +131,32 @@ select {
     -webkit-animation-timing-function: cubic-bezier(.53,.21,.29,.67);
     -moz-animation-timing-function: cubic-bezier(.53,.21,.29,.67);
 }
-@-webkit-keyframes ms-Spinner-spin{from{transform:rotate(0);-ms-transform:rotate(0);-webkit-transform:rotate(0);-moz-transform:rotate(0)}to{transform:rotate(360deg);-ms-transform:rotate(360deg);-webkit-transform:rotate(360deg);-moz-transform:rotate(360deg)}}@keyframes ms-Spinner-spin{from{transform:rotate(0);-ms-transform:rotate(0);-webkit-transform:rotate(0);-moz-transform:rotate(0)}to{transform:rotate(360deg);-ms-transform:rotate(360deg);-webkit-transform:rotate(360deg);-moz-transform:rotate(360deg)}}
+@-webkit-keyframes ms-Spinner-spin{
+  from{
+    transform:rotate(0);
+    -ms-transform:rotate(0);
+    -webkit-transform:rotate(0);
+    -moz-transform:rotate(0)
+  }to{
+    transform:rotate(360deg);
+    -ms-transform:rotate(360deg);
+    -webkit-transform:rotate(360deg);
+    -moz-transform:rotate(360deg)
+  }
+}
+@keyframes ms-Spinner-spin{
+  from{
+    transform:rotate(0);
+    -ms-transform:rotate(0);
+    -webkit-transform:rotate(0);
+    -moz-transform:rotate(0)
+  }to{
+    transform:rotate(360deg);
+    -ms-transform:rotate(360deg);
+    -webkit-transform:rotate(360deg);
+    -moz-transform:rotate(360deg)
+  }
+}
 #load_img img {
     position: relative;
 }

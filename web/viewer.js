@@ -212,8 +212,8 @@ function parseQueryString(query) {
 
 function openFile() {
   window.PDFViewerApplicationOptions.set('defaultUrl', FILE_URL);
-  document.getElementById('load_header').textContent = '正在打开文件';
-  document.getElementById('load_text').textContent = '正在打开文件,请稍后...';
+  document.getElementById('load_header').textContent = '正在下载文件..';
+  document.getElementById('load_text').textContent = '正在从服务器下载文件,请稍后';
   window.PDFViewerApplication.openFile();
 }
 
@@ -235,7 +235,6 @@ function validateUrl(config) {
   let query = document.location.search.substring(1);
   let param = (0, parseQueryString)(query);
 
-  console.log(query);
   if (!('id' in param)) {
     showError(config, '参数 id 不能为空');
     return false;
@@ -261,6 +260,7 @@ function validateUrl(config) {
     return false;
   }
   SESSION_KEY = param.key;
+  document.title = param.bt;
   sendData = query;
   return true;
 }
@@ -270,8 +270,7 @@ function webViewerLoad() {
     return;
   }
 
-  fileLoad().then(function(data) {
-    console.log(data);
+  getFileInfo().then(function(data) {
     if (data.code === 0) {
       FILE_LOADED = true;
       FILE_URL = data.data.replace('https://wfy-oss.oss-cn-hangzhou.aliyuncs.com', 'http://localhost:8888/files');
@@ -284,8 +283,6 @@ function webViewerLoad() {
       let message = data.message;
       showError(config, message);
     }
-
-    console.log('fileLoaded', data);
 }
   ).catch(function(error) {
     showError(config, error.message);
@@ -348,10 +345,7 @@ function webViewerLoad() {
       reject(error);
     };
     xhr.onreadystatechange = function() {
-      console.log('readyStateChanged', xhr.readyState);
         if (xhr.readyState === 4) {
-          console.log('responseText', xhr.responseText);
-          console.log('status', xhr.status);
           let code = xhr.status;
           if (code === 200) {
             // 根据服务器的响应内容格式处理响应结果
@@ -375,16 +369,16 @@ function webViewerLoad() {
 
 }
 
-async function fileLoad() {
-  console.log('开始请求接口');
-  console.time('请求网络');
+async function getFileInfo() {
+  console.log('获取文件信息...');
+  console.time('获取文件信息');
   return new Promise((resolve, reject) => {
     request(API_URL, sendData).then(function(data) {
       resolve(data);
-      console.timeEnd('请求网络');
+      console.timeEnd('获取文件信息');
     }).catch(function(error) {
       reject(error);
-      console.timeEnd('请求网络');
+      console.timeEnd('获取文件信息');
     });
   });
 

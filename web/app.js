@@ -15,19 +15,18 @@
 /* globals PDFBug, Stats */
 
 import {
-  DEFAULT_SCALE_VALUE, getGlobalEventBus, getPDFFileNameFromURL,
-  isValidRotation, MAX_SCALE, MIN_SCALE, noContextMenuHandler,
-  normalizeWheelEventDelta,
-  parseQueryString, PresentationModeState, ProgressBar,
-  RendererType, TextLayerMode
-} from './ui_utils';
-import {
   build, createObjectURL, getDocument, getFilenameFromUrl, GlobalWorkerOptions,
   InvalidPDFException, LinkTarget, loadScript, MissingPDFException, OPS,
   PDFWorker, shadow, UnexpectedResponseException, UNSUPPORTED_FEATURES, URL,
   version
 } from 'pdfjs-lib';
 import { CursorTool, PDFCursorTools } from './pdf_cursor_tools';
+import {
+  DEFAULT_SCALE_VALUE, getGlobalEventBus, getPDFFileNameFromURL,
+  isValidRotation, MAX_SCALE, MIN_SCALE, noContextMenuHandler,
+  normalizeWheelEventDelta, parseQueryString, PresentationModeState,
+  ProgressBar, RendererType, TextLayerMode
+} from './ui_utils';
 import { PDFRenderingQueue, RenderingStates } from './pdf_rendering_queue';
 import { AppOptions } from './app_options';
 import { OverlayManager } from './overlay_manager';
@@ -286,7 +285,6 @@ let PDFViewerApplication = {
 
     const container = appConfig.mainContainer;
     const viewer = appConfig.viewerContainer;
-    console.log('textLayerMode', AppOptions.get('textLayerMode'));
     this.pdfViewer = new PDFViewer({
       container,
       viewer,
@@ -472,7 +470,7 @@ let PDFViewerApplication = {
         title = url;
       }
     }
-    this.setTitle(title);
+    // this.setTitle(title);
   },
 
   setTitle(title) {
@@ -480,7 +478,7 @@ let PDFViewerApplication = {
       // Embedded PDF viewers should not be changing their parent page's title.
       return;
     }
-    document.title = title;
+    // document.title = title;
   },
 
   /**
