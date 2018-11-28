@@ -93,14 +93,6 @@ class Toolbar {
     let { eventBus, items, } = this;
     let self = this;
 
-    items.previous.addEventListener('click', function() {
-      eventBus.dispatch('previouspage', { source: self, });
-    });
-
-    items.next.addEventListener('click', function() {
-      eventBus.dispatch('nextpage', { source: self, });
-    });
-
     items.zoomIn.addEventListener('click', function() {
       eventBus.dispatch('zoomin', { source: self, });
     });
@@ -164,9 +156,6 @@ class Toolbar {
     } else {
       items.pageNumber.textContent = pageNumber;
     }
-
-    items.previous.disabled = (pageNumber <= 1);
-    items.next.disabled = (pageNumber >= pagesCount);
 
     items.zoomOut.disabled = (pageScale <= MIN_SCALE);
     items.zoomIn.disabled = (pageScale >= MAX_SCALE);

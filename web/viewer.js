@@ -43,6 +43,7 @@ let API_URL = '/apis/wecourt-outer-judge/judge/api/gw/getFileUrl';
 let FILE_URL = '';
 let SESSION_KEY = '';
 let sendData = {};
+let FULLNAME = '';
 
 if (typeof PDFJSDev !== 'undefined' && PDFJSDev.test('PRODUCTION')) {
   pdfjsWebApp = require('./app.js');
@@ -76,77 +77,16 @@ function getViewerConfiguration() {
       scaleSelectContainer: null,
       scaleSelect: null,
       customScaleOption: null,
-      previous: document.getElementById('previous'),
-      next: document.getElementById('next'),
+      previous: null,
+      next: null,
       zoomIn: document.getElementById('zoomIn'),
       zoomOut: document.getElementById('zoomOut'),
-      viewFind: document.getElementById('viewFind'),
-      openFile: document.getElementById('openFile'),
-      print: document.getElementById('print'),
-      presentationModeButton: document.getElementById('presentationMode'),
-      download: document.getElementById('download'),
-      viewBookmark: document.getElementById('viewBookmark'),
-    },
-    secondaryToolbar: {
-      toolbar: document.getElementById('secondaryToolbar'),
-      toggleButton: document.getElementById('secondaryToolbarToggle'),
-      toolbarButtonContainer:
-        document.getElementById('secondaryToolbarButtonContainer'),
-      presentationModeButton:
-        document.getElementById('secondaryPresentationMode'),
-      openFileButton: document.getElementById('secondaryOpenFile'),
-      printButton: document.getElementById('secondaryPrint'),
-      downloadButton: document.getElementById('secondaryDownload'),
-      viewBookmarkButton: document.getElementById('secondaryViewBookmark'),
-      firstPageButton: document.getElementById('firstPage'),
-      lastPageButton: document.getElementById('lastPage'),
-      pageRotateCwButton: document.getElementById('pageRotateCw'),
-      pageRotateCcwButton: document.getElementById('pageRotateCcw'),
-      cursorSelectToolButton: document.getElementById('cursorSelectTool'),
-      cursorHandToolButton: document.getElementById('cursorHandTool'),
-      scrollVerticalButton: document.getElementById('scrollVertical'),
-      scrollHorizontalButton: document.getElementById('scrollHorizontal'),
-      scrollWrappedButton: document.getElementById('scrollWrapped'),
-      spreadNoneButton: document.getElementById('spreadNone'),
-      spreadOddButton: document.getElementById('spreadOdd'),
-      spreadEvenButton: document.getElementById('spreadEven'),
-      documentPropertiesButton: document.getElementById('documentProperties'),
-    },
-    fullscreen: {
-      contextFirstPage: document.getElementById('contextFirstPage'),
-      contextLastPage: document.getElementById('contextLastPage'),
-      contextPageRotateCw: document.getElementById('contextPageRotateCw'),
-      contextPageRotateCcw: document.getElementById('contextPageRotateCcw'),
-    },
-    sidebar: {
-      // Divs (and sidebar button)
-      outerContainer: document.getElementById('outerContainer'),
-      viewerContainer: document.getElementById('viewerContainer'),
-      toggleButton: document.getElementById('sidebarToggle'),
-      // Buttons
-      thumbnailButton: document.getElementById('viewThumbnail'),
-      outlineButton: document.getElementById('viewOutline'),
-      attachmentsButton: document.getElementById('viewAttachments'),
-      // Views
-      thumbnailView: document.getElementById('thumbnailView'),
-      outlineView: document.getElementById('outlineView'),
-      attachmentsView: document.getElementById('attachmentsView'),
-    },
-    sidebarResizer: {
-      outerContainer: document.getElementById('outerContainer'),
-      resizer: document.getElementById('sidebarResizer'),
-    },
-    findBar: {
-      bar: document.getElementById('findbar'),
-      toggleButton: document.getElementById('viewFind'),
-      findField: document.getElementById('findInput'),
-      highlightAllCheckbox: document.getElementById('findHighlightAll'),
-      caseSensitiveCheckbox: document.getElementById('findMatchCase'),
-      entireWordCheckbox: document.getElementById('findEntireWord'),
-      findMsg: document.getElementById('findMsg'),
-      findResultsCount: document.getElementById('findResultsCount'),
-      findPreviousButton: document.getElementById('findPrevious'),
-      findNextButton: document.getElementById('findNext'),
+      viewFind: null,
+      openFile: null,
+      print: null,
+      presentationModeButton: null,
+      download: null,
+      viewBookmark: null,
     },
     passwordOverlay: {
       overlayName: 'passwordOverlay',
@@ -155,27 +95,6 @@ function getViewerConfiguration() {
       input: document.getElementById('password'),
       submitButton: document.getElementById('passwordSubmit'),
       cancelButton: document.getElementById('passwordCancel'),
-    },
-    documentProperties: {
-      overlayName: 'documentPropertiesOverlay',
-      container: document.getElementById('documentPropertiesOverlay'),
-      closeButton: document.getElementById('documentPropertiesClose'),
-      fields: {
-        'fileName': document.getElementById('fileNameField'),
-        'fileSize': document.getElementById('fileSizeField'),
-        'title': document.getElementById('titleField'),
-        'author': document.getElementById('authorField'),
-        'subject': document.getElementById('subjectField'),
-        'keywords': document.getElementById('keywordsField'),
-        'creationDate': document.getElementById('creationDateField'),
-        'modificationDate': document.getElementById('modificationDateField'),
-        'creator': document.getElementById('creatorField'),
-        'producer': document.getElementById('producerField'),
-        'version': document.getElementById('versionField'),
-        'pageCount': document.getElementById('pageCountField'),
-        'pageSize': document.getElementById('pageSizeField'),
-        'linearized': document.getElementById('linearizedField'),
-      },
     },
     errorWrapper: {
       container: document.getElementById('errorWrapper'),
@@ -190,8 +109,6 @@ function getViewerConfiguration() {
       loadHeader: document.getElementById('load_header'),
       loadText: document.getElementById('load_text'),
     },
-    printContainer: document.getElementById('printContainer'),
-    openFileInputName: 'fileInput',
     debuggerScriptPath: './debugger.js',
   };
 }
@@ -206,7 +123,6 @@ function parseQueryString(query) {
     let value = param.length > 1 ? param[1] : null;
     params[decodeURIComponent(key)] = decodeURIComponent(value);
   }
-
   return params;
 }
 
@@ -259,7 +175,15 @@ function validateUrl(config) {
     showError(config, '参数 key 不能为空');
     return false;
   }
+
+  if (!('name' in param)) {
+    showError(config, '参数 name 不能为空');
+    return false;
+  }
   SESSION_KEY = param.key;
+  FULLNAME = param.name;
+  console.log(FULLNAME)
+  document.getElementById('fullname').textContent = FULLNAME;
   document.title = param.bt;
   sendData = query;
   return true;
@@ -273,17 +197,18 @@ function webViewerLoad() {
   getFileInfo().then(function(data) {
     if (data.code === 0) {
       FILE_LOADED = true;
-      FILE_URL = data.data.replace('https://wfy-oss.oss-cn-hangzhou.aliyuncs.com', 'http://localhost:8888/files');
+      FILE_URL = 'https://jswfy.oss-cn-hangzhou.aliyuncs.com/1111.pdf';
+      //FILE_URL = data.data.replace('https://wfy-oss.oss-cn-hangzhou.aliyuncs.com', '/oss_files');
       if (VIEW_READY) {
         openFile();
       }
     } else if (data.code === 404) {
       showError(config, '连接不存在');
     } else {
-      let message = data.message;
+      let message = data.msg;
       showError(config, message);
     }
-}
+  }
   ).catch(function(error) {
     showError(config, error.message);
     console.error('error', error.message);
@@ -322,7 +247,18 @@ function webViewerLoad() {
 
     window.PDFViewerApplication = pdfjsWebApp.PDFViewerApplication;
     window.PDFViewerApplicationOptions = pdfjsWebAppOptions.AppOptions;
-    pdfjsWebApp.PDFViewerApplication.run(config);
+    console.log('加载资源完成');
+    console.timeEnd('加载资源耗时');
+    console.log('启动阅读器...');
+    console.time('启动阅读器');
+    window.PDFViewerApplication.initialize(config).then(function() {
+      VIEW_READY = true;
+      if (FILE_LOADED) {
+        openFile();
+      }
+    });
+    console.log('启动阅读器完成');
+    console.timeEnd('启动阅读器');
   }
 }
 

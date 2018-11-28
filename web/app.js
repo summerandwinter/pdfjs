@@ -41,6 +41,10 @@ import { ViewHistory } from './view_history';
 const DEFAULT_SCALE_DELTA = 1.1;
 const DISABLE_AUTO_FETCH_LOADING_BAR_TIMEOUT = 5000; // ms
 const FORCE_PAGES_LOADED_TIMEOUT = 10000; // ms
+const TOOLBAR_AUTO_HIDDEN_TIME = 3000; // ms
+let TIME_INTERVAL = null;
+let ACTIVE_TIME = null;
+let ACTIVE_STATUS = 0;
 
 const DefaultExternalServices = {
   updateFindControlState(data) {},
@@ -140,6 +144,25 @@ let PDFViewerApplication = {
     });
 
     this.initialized = true;
+  },
+
+
+  _startInterval() {
+    let self = this;
+    TIME_INTERVAL = setInterval(function() {
+      if (ACTIVE_TIME) {
+        let diff = new Date().getTime() - ACTIVE_TIME;
+        if (diff > TOOLBAR_AUTO_HIDDEN_TIME && ACTIVE_STATUS === 1) {
+          self.hideToolbar();
+        }
+      }
+    }, 1000);
+  },
+
+  _endInterval() {
+    if(TIME_INTERVAL) {
+      TIME_INTERVAL.clearInterval();
+    } 
   },
 
   /**
@@ -481,6 +504,50 @@ let PDFViewerApplication = {
     // document.title = title;
   },
 
+  showToolbar() {
+
+    ACTIVE_TIME = new Date().getTime();
+    if(ACTIVE_STATUS === 1) {
+      return;
+    }
+    ACTIVE_STATUS = 1; 
+    let element = this.appConfig.toolbar.container;
+    let start = null;
+    const timeout = 200;
+    element.removeAttribute('hidden');
+    function step(timestamp) {
+      if (!start) {
+        start = timestamp;
+      }
+      let progress = timestamp - start;
+      element.style.opacity = Math.min(progress / timeout, 1);
+      if (progress < timeout) {
+          window.requestAnimationFrame(step);
+      }
+    }
+    window.requestAnimationFrame(step);
+  },
+
+  hideToolbar() {
+    let element = this.appConfig.toolbar.container;
+    let start = null;
+    const timeout = 200;
+    function step(timestamp) {
+      if (!start) {
+        start = timestamp;
+      }
+      let progress = timestamp - start;
+      element.style.opacity = Math.max((timeout - progress) / timeout, 0);
+      if (progress < timeout) {
+          window.requestAnimationFrame(step);
+      } else {
+        element.setAttribute('hidden', 'true');
+        ACTIVE_STATUS = 0;
+      }
+    }
+    window.requestAnimationFrame(step);
+
+  },
   /**
    * Closes opened PDF document.
    * @returns {Promise} - Returns the promise, which is resolved when all
@@ -492,6 +559,8 @@ let PDFViewerApplication = {
 
     let loadingWrapper = this.appConfig.loadingWrapper.container;
     loadingWrapper.setAttribute('hidden', 'true');
+    this._endInterval();
+    this.hideToolbar();
 
     if (!this.pdfLoadingTask) {
       return;
@@ -703,8 +772,10 @@ let PDFViewerApplication = {
     if (typeof PDFJSDev === 'undefined' ||
         !PDFJSDev.test('FIREFOX || MOZCENTRAL')) {
 
-      let loadingWrapper = this.appConfig.loadingWrapper.container;
-      loadingWrapper.setAttribute('hidden', 'true');
+      this.hideToolbar();
+      this._endInterval();
+      let toolbarWrapper = this.appConfig.toolbar.container;
+      toolbarWrapper.setAttribute('hidden', 'true');
 
       let errorWrapperConfig = this.appConfig.errorWrapper;
       let errorWrapper = errorWrapperConfig.container;
@@ -795,6 +866,10 @@ let PDFViewerApplication = {
 
       let loadingWrapper = this.appConfig.loadingWrapper.container;
       loadingWrapper.setAttribute('hidden', 'true');
+      // 启动定时器
+      this._startInterval();
+      // 激活窗口
+      this.showToolbar();
 
       firstPagePromise.then(() => {
         this.eventBus.dispatch('documentloaded', { source: this, });
@@ -1830,7 +1905,8 @@ function webViewerWheel(evt) {
 }
 
 function webViewerClick(evt) {
-
+   console.log('webViewerClick');
+   PDFViewerApplication.showToolbar();
 }
 
 function webViewerKeyDown(evt) {
