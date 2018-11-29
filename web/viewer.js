@@ -44,7 +44,6 @@ let FILE_URL = '';
 let SESSION_KEY = '';
 let sendData = {};
 let FULLNAME = '';
-const debug = true;
 
 if (typeof PDFJSDev !== 'undefined' && PDFJSDev.test('PRODUCTION')) {
   pdfjsWebApp = require('./app.js');
@@ -76,7 +75,7 @@ function info(message, showTime = true) {
     info += timeFormated + ' ';
   }
   info += message;
-  console.log(info)
+  console.log(info);
 }
 
 function getViewerConfiguration() {

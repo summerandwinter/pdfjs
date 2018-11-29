@@ -146,7 +146,6 @@ let PDFViewerApplication = {
     this.initialized = true;
   },
 
-
   _startInterval() {
     let self = this;
     TIME_INTERVAL = setInterval(function() {
@@ -160,9 +159,9 @@ let PDFViewerApplication = {
   },
 
   _endInterval() {
-    if(TIME_INTERVAL) {
+    if (TIME_INTERVAL) {
       TIME_INTERVAL.clearInterval();
-    } 
+    }
   },
 
   /**
@@ -507,10 +506,10 @@ let PDFViewerApplication = {
   showToolbar() {
 
     ACTIVE_TIME = new Date().getTime();
-    if(ACTIVE_STATUS === 1) {
+    if (ACTIVE_STATUS === 1) {
       return;
     }
-    ACTIVE_STATUS = 1; 
+    ACTIVE_STATUS = 1;
     let element = this.appConfig.toolbar.container;
     let start = null;
     const timeout = 200;
@@ -1389,11 +1388,11 @@ let PDFViewerApplication = {
 
 let validateFileURL;
 if (typeof PDFJSDev === 'undefined' || PDFJSDev.test('GENERIC')) {
-  const HOSTED_VIEWER_ORIGINS = ['null',
-    'http://mozilla.github.io', 'https://mozilla.github.io'];
+  // const HOSTED_VIEWER_ORIGINS = ['null',
+  //   'http://mozilla.github.io', 'https://mozilla.github.io'];
   validateFileURL = function validateFileURL(file) {
     return;
-    if (file === undefined) {
+    /* if (file === undefined) {
       return;
     }
     try {
@@ -1420,7 +1419,7 @@ if (typeof PDFJSDev === 'undefined' || PDFJSDev.test('GENERIC')) {
         PDFViewerApplication.error(loadingErrorMessage, { message, });
       });
       throw ex;
-    }
+    } */
   };
 }
 
