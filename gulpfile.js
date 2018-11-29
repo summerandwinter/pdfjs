@@ -614,7 +614,7 @@ gulp.task('generic', ['buildnumber', 'locale'], function () {
   rimraf.sync(GENERIC_DIR);
 
   return merge([
-    createBundle(defines).pipe(gulp.dest(GENERIC_DIR + 'build')),
+    createBundle(defines).pipe(gulp.dest(GENERIC_DIR + 'web/build')),
     createWebBundle(defines).pipe(gulp.dest(GENERIC_DIR + 'web')),
     gulp.src(COMMON_WEB_FILES, { base: 'web/', })
         .pipe(gulp.dest(GENERIC_DIR + 'web')),
@@ -677,7 +677,7 @@ gulp.task('minified-pre', ['buildnumber', 'locale'], function () {
   rimraf.sync(MINIFIED_DIR);
 
   return merge([
-    createBundle(defines).pipe(gulp.dest(MINIFIED_DIR + 'build')),
+    createBundle(defines).pipe(gulp.dest(MINIFIED_DIR + 'web/build')),
     createWebBundle(defines).pipe(gulp.dest(MINIFIED_DIR + 'web')),
     createImageDecodersBundle(builder.merge(defines, { IMAGE_DECODERS: true, }))
         .pipe(gulp.dest(MINIFIED_DIR + 'image_decoders')),
@@ -703,9 +703,9 @@ gulp.task('minified-pre', ['buildnumber', 'locale'], function () {
 });
 
 gulp.task('minified-post', ['minified-pre'], function () {
-  var pdfFile = fs.readFileSync(MINIFIED_DIR + '/build/pdf.js').toString();
+  var pdfFile = fs.readFileSync(MINIFIED_DIR + '/web/build/pdf.js').toString();
   var pdfWorkerFile =
-    fs.readFileSync(MINIFIED_DIR + '/build/pdf.worker.js').toString();
+    fs.readFileSync(MINIFIED_DIR + '/web/build/pdf.worker.js').toString();
   var pdfImageDecodersFile = fs.readFileSync(MINIFIED_DIR +
     '/image_decoders/pdf.image_decoders.js').toString();
   var viewerFiles = {
@@ -722,9 +722,9 @@ gulp.task('minified-post', ['minified-pre'], function () {
 
   fs.writeFileSync(MINIFIED_DIR + '/web/pdf.viewer.js',
                    Terser.minify(viewerFiles).code);
-  fs.writeFileSync(MINIFIED_DIR + '/build/pdf.min.js',
+  fs.writeFileSync(MINIFIED_DIR + '/web/build/pdf.min.js',
                    Terser.minify(pdfFile).code);
-  fs.writeFileSync(MINIFIED_DIR + '/build/pdf.worker.min.js',
+  fs.writeFileSync(MINIFIED_DIR + '/web/build/pdf.worker.min.js',
                    Terser.minify(pdfWorkerFile, optsForHugeFile).code);
   fs.writeFileSync(MINIFIED_DIR + 'image_decoders/pdf.image_decoders.min.js',
                    Terser.minify(pdfImageDecodersFile).code);
@@ -734,12 +734,12 @@ gulp.task('minified-post', ['minified-pre'], function () {
 
   fs.unlinkSync(MINIFIED_DIR + '/web/viewer.js');
   fs.unlinkSync(MINIFIED_DIR + '/web/debugger.js');
-  fs.unlinkSync(MINIFIED_DIR + '/build/pdf.js');
-  fs.unlinkSync(MINIFIED_DIR + '/build/pdf.worker.js');
-  fs.renameSync(MINIFIED_DIR + '/build/pdf.min.js',
-                MINIFIED_DIR + '/build/pdf.js');
-  fs.renameSync(MINIFIED_DIR + '/build/pdf.worker.min.js',
-                MINIFIED_DIR + '/build/pdf.worker.js');
+  fs.unlinkSync(MINIFIED_DIR + '/web/build/pdf.js');
+  fs.unlinkSync(MINIFIED_DIR + '/web/build/pdf.worker.js');
+  fs.renameSync(MINIFIED_DIR + '/web/build/pdf.min.js',
+                MINIFIED_DIR + '/web/build/pdf.js');
+  fs.renameSync(MINIFIED_DIR + '/web/build/pdf.worker.min.js',
+                MINIFIED_DIR + '/web/build/pdf.worker.js');
   fs.renameSync(MINIFIED_DIR + '/image_decoders/pdf.image_decoders.min.js',
                 MINIFIED_DIR + '/image_decoders/pdf.image_decoders.js');
 });

@@ -39,11 +39,12 @@ let pdfjsWebApp, pdfjsWebAppOptions;
 let FILE_LOADED = false;
 let VIEW_READY = false;
 // let API_URL = 'https://wfyfgxcx.jsfy.gov.cn/wecourt-outer-judge/judge/api/gw/getFileUrl';
-let API_URL = '/apis/wecourt-outer-judge/judge/api/gw/getFileUrl';
+let API_URL = '/wecourt-outer-judge/judge/api/gw/getFileUrl';
 let FILE_URL = '';
 let SESSION_KEY = '';
 let sendData = {};
 let FULLNAME = '';
+const debug = true;
 
 if (typeof PDFJSDev !== 'undefined' && PDFJSDev.test('PRODUCTION')) {
   pdfjsWebApp = require('./app.js');
@@ -62,6 +63,20 @@ if (typeof PDFJSDev !== 'undefined' && PDFJSDev.test('CHROME')) {
 }
 if (typeof PDFJSDev !== 'undefined' && PDFJSDev.test('CHROME || GENERIC')) {
   require('./pdf_print_service.js');
+}
+
+function info(message, showTime = true) {
+  let info = '';
+  let date = new Date();
+  let h = date.getHours();
+  let m = date.getMinutes();
+  let s = date.getSeconds();
+  let timeFormated = `[${h}:${m}:${s}]`;
+  if (showTime) {
+    info += timeFormated + ' ';
+  }
+  info += message;
+  console.log(info)
 }
 
 function getViewerConfiguration() {
@@ -115,7 +130,7 @@ function getViewerConfiguration() {
 
 function parseQueryString(query) {
   let parts = query.split('&');
-  let params = Object.create(null);
+  let params = {};
 
   for (let i = 0, ii = parts.length; i < ii; ++i) {
     let param = parts[i].split('=');
@@ -182,7 +197,6 @@ function validateUrl(config) {
   }
   SESSION_KEY = param.key;
   FULLNAME = param.name;
-  console.log(FULLNAME)
   document.getElementById('fullname').textContent = FULLNAME;
   document.title = param.bt;
   sendData = query;
@@ -197,8 +211,9 @@ function webViewerLoad() {
   getFileInfo().then(function(data) {
     if (data.code === 0) {
       FILE_LOADED = true;
-      FILE_URL = 'https://jswfy.oss-cn-hangzhou.aliyuncs.com/1111.pdf';
-      //FILE_URL = data.data.replace('https://wfy-oss.oss-cn-hangzhou.aliyuncs.com', '/oss_files');
+      FILE_URL = data.data;
+      // FILE_URL = 'https://jswfy.oss-cn-hangzhou.aliyuncs.com/1111.pdf';
+      // FILE_URL = data.data.replace('https://wfy-oss.oss-cn-hangzhou.aliyuncs.com', '/oss_files');
       if (VIEW_READY) {
         openFile();
       }
@@ -214,7 +229,7 @@ function webViewerLoad() {
     console.error('error', error.message);
   });
 
-  console.log('加载资源...');
+  info('加载资源...');
   console.time('加载资源耗时');
 
   if (typeof PDFJSDev === 'undefined' || !PDFJSDev.test('PRODUCTION')) {
@@ -224,10 +239,10 @@ function webViewerLoad() {
       SystemJS.import('pdfjs-web/genericcom'),
       SystemJS.import('pdfjs-web/pdf_print_service'),
     ]).then(function([app, appOptions, ...otherModules]) {
-      console.log('加载资源完成');
+      info('加载资源完成');
       console.timeEnd('加载资源耗时');
-      console.log('启动阅读器...');
-      console.time('启动阅读器');
+      info('启动阅读器...');
+      console.time('启动阅读器耗时');
       window.PDFViewerApplication = app.PDFViewerApplication;
       window.PDFViewerApplicationOptions = appOptions.AppOptions;
       app.PDFViewerApplication.initialize(config).then(function() {
@@ -237,8 +252,8 @@ function webViewerLoad() {
         }
       });
       // app.PDFViewerApplication.run(config);
-      console.log('启动阅读器完成');
-      console.timeEnd('启动阅读器');
+      info('启动阅读器完成');
+      console.timeEnd('启动阅读器耗时');
     });
   } else {
     if (typeof PDFJSDev !== 'undefined' && PDFJSDev.test('CHROME')) {
@@ -247,18 +262,18 @@ function webViewerLoad() {
 
     window.PDFViewerApplication = pdfjsWebApp.PDFViewerApplication;
     window.PDFViewerApplicationOptions = pdfjsWebAppOptions.AppOptions;
-    console.log('加载资源完成');
+    info('加载资源完成');
     console.timeEnd('加载资源耗时');
-    console.log('启动阅读器...');
-    console.time('启动阅读器');
+    info('启动阅读器...');
+    console.time('启动阅读器耗时');
     window.PDFViewerApplication.initialize(config).then(function() {
       VIEW_READY = true;
       if (FILE_LOADED) {
         openFile();
       }
     });
-    console.log('启动阅读器完成');
-    console.timeEnd('启动阅读器');
+    info('启动阅读器完成');
+    console.timeEnd('启动阅读器耗时');
   }
 }
 
@@ -272,11 +287,11 @@ function webViewerLoad() {
     'application/x-www-form-urlencoded;charset=UTF-8');
     xhr.setRequestHeader('sessionKey', SESSION_KEY);
     xhr.onerror = function (error) {
-      console.log('xhr onerror', error);
+      info('xhr onerror', error);
       reject(error);
     };
     xhr.ontimeout = function() {
-      console.log('xhr timeout');
+      info('xhr timeout');
       let error = { code: 300, message: '连接超时', };
       reject(error);
     };
@@ -299,22 +314,21 @@ function webViewerLoad() {
           }
         }
     };
-    // 将用户输入值序列化成字符串
-    xhr.send(JSON.stringify(data));
+    xhr.send(data);
   });
 
 }
 
 async function getFileInfo() {
-  console.log('获取文件信息...');
-  console.time('获取文件信息');
+  info('获取文件信息...');
+  console.time('获取文件信息耗时');
   return new Promise((resolve, reject) => {
     request(API_URL, sendData).then(function(data) {
       resolve(data);
-      console.timeEnd('获取文件信息');
+      console.timeEnd('获取文件信息耗时');
     }).catch(function(error) {
       reject(error);
-      console.timeEnd('获取文件信息');
+      console.timeEnd('获取文件信息耗时');
     });
   });
 
