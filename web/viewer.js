@@ -126,7 +126,11 @@ function getViewerConfiguration() {
     debuggerScriptPath: './debugger.js',
   };
 }
-
+/**
+ * 解析 url 参数
+ * @param  {url}
+ * @return {Object}
+ */
 function parseQueryString(query) {
   let parts = query.split('&');
   let params = {};
@@ -140,6 +144,10 @@ function parseQueryString(query) {
   return params;
 }
 
+/**
+ * 打开 pdf 文件
+ * @return {void}
+ */
 function openFile() {
   window.PDFViewerApplicationOptions.set('defaultUrl', FILE_URL);
   document.getElementById('load_header').textContent = '正在下载文件..';
@@ -147,6 +155,12 @@ function openFile() {
   window.PDFViewerApplication.openFile();
 }
 
+/**
+ * 显示错误消息提示
+ * @param  {config}
+ * @param  {message}
+ * @return {void}
+ */
 function showError(config, message) {
   console.error(message);
   let errorWrapperConfig = config.errorWrapper;
@@ -161,6 +175,11 @@ function showError(config, message) {
 
 }
 
+/**
+ * 检查 url 参数
+ * @param  {config}
+ * @return {Boolean}
+ */
 function validateUrl(config) {
   let query = document.location.search.substring(1);
   let param = (0, parseQueryString)(query);
