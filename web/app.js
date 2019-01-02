@@ -61,6 +61,7 @@ const DefaultExternalServices = {
   createL10n(options) {
     throw new Error('Not implemented: createL10n');
   },
+
   supportsIntegratedFind: false,
   supportsDocumentFonts: true,
   supportsDocumentColors: true,
