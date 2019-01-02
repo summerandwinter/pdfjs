@@ -39,11 +39,15 @@ let pdfjsWebApp, pdfjsWebAppOptions;
 let FILE_LOADED = false;
 let VIEW_READY = false;
 // let API_URL = 'https://wfyfgxcx.jsfy.gov.cn/wecourt-outer-judge/judge/api/gw/getFileUrl';
-let API_URL = '/wecourt-outer-judge/judge/api/gw/getFileUrl';
+let API_URL = '/apis/wecourt-outer-judge/judge/api/gw/getFileUrl';
+let API_URL2 = '/apis/wecourt-outer-judge/judge/api/documentFlow/getFileUrl'
 let FILE_URL = '';
 let SESSION_KEY = '';
+let FJURL = '';
 let sendData = {};
 let FULLNAME = '';
+const MIN_SCALE = 0.10;
+const MAX_SCALE = 2.0;
 
 if (typeof PDFJSDev !== 'undefined' && PDFJSDev.test('PRODUCTION')) {
   pdfjsWebApp = require('./app.js');
@@ -150,9 +154,37 @@ function parseQueryString(query) {
  */
 function openFile() {
   window.PDFViewerApplicationOptions.set('defaultUrl', FILE_URL);
-  document.getElementById('load_header').textContent = '正在下载文件..';
-  document.getElementById('load_text').textContent = '正在从服务器下载文件,请稍后';
+  let percent = parseInt(Math.random() * 10 + 20);
+  setInterval(function() {
+    if (percent <= 90) {
+      percent += parseInt(Math.random() * 5);
+      document.getElementById('load_text').textContent = percent + '%';
+    }
+  }, 100);
   window.PDFViewerApplication.openFile();
+  initHammer();
+}
+
+function initHammer() {
+  console.log('init hammer');
+  let viewer = document.getElementById('viewer');
+  let initScale = 1;
+  new AlloyFinger(viewer, {
+    multipointStart: function () {
+      initScale = window.PDFViewerApplication.pdfViewer.currentScale;
+    },
+    pinch: function (ev) {
+      let zoom = initScale * ev.zoom;
+      if (zoom < MIN_SCALE) {
+        return;
+      }
+      if (zoom > MAX_SCALE) {
+        return;
+      }
+      window.PDFViewerApplication.zoom(ev, zoom);
+    },
+  });
+
 }
 
 /**
@@ -184,54 +216,64 @@ function validateUrl(config) {
   let query = document.location.search.substring(1);
   let param = (0, parseQueryString)(query);
 
-  if (!('id' in param)) {
-    showError(config, '参数 id 不能为空');
-    return false;
-  }
-  if (!('fjid' in param)) {
-    showError(config, '参数 fjid 不能为空');
-    return false;
-  }
-  if (!('fjmm' in param)) {
-    showError(config, '参数 fjmm 不能为空');
-    return false;
-  }
-  if (!('bt' in param)) {
-    showError(config, '参数 bt 不能为空');
-    return false;
-  }
-  if (!('ftpf' in param)) {
-    showError(config, '参数 ftpf 不能为空');
-    return false;
-  }
-  if (!('key' in param)) {
-    showError(config, '参数 key 不能为空');
-    return false;
-  }
-
-  if (!('name' in param)) {
-    showError(config, '参数 name 不能为空');
-    return false;
+  if ('fjurl' in param) {
+    FJURL = param.fjurl;
   }
   SESSION_KEY = param.key;
+
   FULLNAME = param.name;
   document.getElementById('fullname').textContent = FULLNAME;
-  document.title = param.bt;
+  // document.getElementById('fullname').textContent = FULLNAME;
+  document.title = param.fjmm;
   sendData = query;
   return true;
 }
 function webViewerLoad() {
+  let u = navigator.userAgent;
+    let isIOS = !!u.match(/\(i[^;]+;( U;)? CPU.+Mac OS X/); // ios终端
+    if (isIOS) {
+        if (screen.height === 812 && screen.width === 375) {
+          document.getElementById('isIPhoneX').className = 'watermarkx';
+          console.log('is IphoneX');
+        }
+    }
   let config = getViewerConfiguration();
   if (!validateUrl(config)) {
     return;
   }
-
-  getFileInfo().then(function(data) {
+  if (FJURL !== '') {
+    FILE_LOADED = true;
+    FILE_URL = FJURL;
+    if (VIEW_READY) {
+      openFile();
+    }
+  } else {
+    if (sendData.search('ftpf') !== -1) {
+      console.log('%c ll' + sendData, 'background: #222; color: #bada55');
+      getFileInfo().then(function(data) {
+      if (data.code === 0) {
+        FILE_LOADED = true;
+        FILE_URL = data.data;
+        if (VIEW_READY) {
+          openFile();
+        }
+      } else if (data.code === 404) {
+        showError(config, '连接不存在');
+      } else {
+        let message = data.msg;
+        showError(config, message);
+      }
+    }
+  ).catch(function(error) {
+    showError(config, error.message);
+    console.error('error', error.message);
+  });
+} else {
+  console.log('%c ll'+sendData,'background:red; color: #bada55')
+  getFileInfo2().then(function(data) {
     if (data.code === 0) {
       FILE_LOADED = true;
       FILE_URL = data.data;
-      // FILE_URL = 'https://jswfy.oss-cn-hangzhou.aliyuncs.com/1111.pdf';
-      // FILE_URL = data.data.replace('https://wfy-oss.oss-cn-hangzhou.aliyuncs.com', '/oss_files');
       if (VIEW_READY) {
         openFile();
       }
@@ -246,7 +288,8 @@ function webViewerLoad() {
     showError(config, error.message);
     console.error('error', error.message);
   });
-
+}
+}
   info('加载资源...');
   console.time('加载资源耗时');
 
@@ -269,7 +312,6 @@ function webViewerLoad() {
           openFile();
         }
       });
-      // app.PDFViewerApplication.run(config);
       info('启动阅读器完成');
       console.timeEnd('启动阅读器耗时');
     });
@@ -351,7 +393,20 @@ async function getFileInfo() {
   });
 
 }
+async function getFileInfo2() {
+  info('获取文件信息...');
+  console.time('获取文件信息耗时');
+  return new Promise((resolve, reject) => {
+    request(API_URL2, sendData).then(function(data) {
+      resolve(data);
+      console.timeEnd('获取文件信息耗时');
+    }).catch(function(error) {
+      reject(error);
+      console.timeEnd('获取文件信息耗时');
+    });
+  });
 
+}
 if (document.readyState === 'interactive' ||
     document.readyState === 'complete') {
   webViewerLoad();

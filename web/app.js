@@ -38,7 +38,7 @@ import { PDFViewer } from './pdf_viewer';
 import { Toolbar } from './toolbar';
 import { ViewHistory } from './view_history';
 
-const DEFAULT_SCALE_DELTA = 1.1;
+const DEFAULT_SCALE_DELTA = 1.05;
 const DISABLE_AUTO_FETCH_LOADING_BAR_TIMEOUT = 5000; // ms
 const FORCE_PAGES_LOADED_TIMEOUT = 10000; // ms
 const TOOLBAR_AUTO_HIDDEN_TIME = 3000; // ms
@@ -363,25 +363,72 @@ let PDFViewerApplication = {
   run(config) {
     this.initialize(config).then(webViewerInitialized);
   },
+  zoom(evt, zoom) {
+    // this.pdfViewer.currentScaleValue = evt.zoom;
+    let pdfViewer = PDFViewerApplication.pdfViewer;
+    if (pdfViewer.isInPresentationMode) {
+      return;
+    }
+
+    // Only zoom the pages, not the entire viewer.
+    evt.preventDefault();
+    // NOTE: this check must be placed *after* preventDefault.
+    if (zoomDisabled) {
+      return;
+    }
+
+    let previousScale = pdfViewer.currentScale;
+
+    pdfViewer.currentScaleValue = zoom;
+
+    let currentScale = pdfViewer.currentScale;
+
+    if (previousScale !== currentScale) {
+      // After scaling the page via zoomIn/zoomOut, the position of the upper-
+      // left corner is restored. When the mouse wheel is used, the position
+      // under the cursor should be restored instead.
+      let currentX = evt.touches[0].pageX;
+      let currentY = evt.touches[0].pageY;
+      let sCurrentX = evt.touches[1].pageX;
+      let sCurrentY = evt.touches[1].pageY;
+      let clientX = currentX - (currentX - sCurrentX) / 2;
+      let clientY = currentY - (currentY - sCurrentY) / 2;
+      let scaleCorrectionFactor = currentScale / previousScale - 1;
+      let rect = pdfViewer.container.getBoundingClientRect();
+      let dx = clientX - rect.left;
+      let dy = clientY - rect.top;
+      pdfViewer.container.scrollLeft += dx * scaleCorrectionFactor;
+      pdfViewer.container.scrollTop += dy * scaleCorrectionFactor;
+    }
+  },
 
   zoomIn(ticks) {
+    console.log(ticks)
     let newScale = this.pdfViewer.currentScale;
+    // console.log("DEFAULT_SCALE_DELTA=",DEFAULT_SCALE_DELTA)
     do {
       newScale = (newScale * DEFAULT_SCALE_DELTA).toFixed(2);
-      newScale = Math.ceil(newScale * 10) / 10;
+      // newScale = Math.ceil(newScale * 10) / 10;
       newScale = Math.min(MAX_SCALE, newScale);
     } while (--ticks > 0 && newScale < MAX_SCALE);
-    this.pdfViewer.currentScaleValue = newScale;
+    // console.log('newScale=',newScale,'&&MAX_SCALE=',MAX_SCALE/10)
+    // if(newScale<=MAX_SCALE/10){
+      this.pdfViewer.currentScaleValue = newScale;
+    // }
   },
 
   zoomOut(ticks) {
     let newScale = this.pdfViewer.currentScale;
+    // console.log("DEFAULT_SCALE_DELTA=",DEFAULT_SCALE_DELTA)
     do {
       newScale = (newScale / DEFAULT_SCALE_DELTA).toFixed(2);
-      newScale = Math.floor(newScale * 10) / 10;
+      // newScale = Math.floor(newScale * 10) / 10;
       newScale = Math.max(MIN_SCALE, newScale);
-    } while (--ticks > 0 && newScale > MIN_SCALE);
+    } while (--ticks > 0 && newScale > MIN_SCALE*4);
+    // console.log('newScale=',newScale,'&&MIN_SCALE=',MIN_SCALE*8)
+    if(newScale > MIN_SCALE*4){
     this.pdfViewer.currentScaleValue = newScale;
+    }
   },
 
   get pagesCount() {
@@ -863,8 +910,6 @@ let PDFViewerApplication = {
       this.downloadComplete = true;
       this.loadingBar.hide();
 
-      let loadingWrapper = this.appConfig.loadingWrapper.container;
-      loadingWrapper.setAttribute('hidden', 'true');
       // 启动定时器
       this._startInterval();
       // 激活窗口
@@ -985,6 +1030,12 @@ let PDFViewerApplication = {
         // To prevent any future issues, e.g. the document being completely
         // blank on load, always trigger rendering here.
         pdfViewer.update();
+        // 主动触发窗口大小变化的事件
+        // 修复 DEFAULT_SCALE_VALUE 为 page-width 时出现滚动条的问题
+        webViewerResize();
+        let loadingWrapper = PDFViewerApplication.appConfig
+        .loadingWrapper.container;
+        loadingWrapper.setAttribute('hidden', 'true');
       });
     });
 
@@ -1155,12 +1206,16 @@ let PDFViewerApplication = {
     // even if the active page didn't change during document load.
     this.toolbar.setPageNumber(this.pdfViewer.currentPageNumber,
                                this.pdfViewer.currentPageLabel);
-
-    if (!this.pdfViewer.currentScaleValue) {
+    // 禁止初始化时使用上一次的缩放度,时间太短没有找到非侵入式的修改方法
+    // 如果要恢复
+    // 1.注释掉下面一行代码
+    this.pdfViewer.currentScaleValue = DEFAULT_SCALE_VALUE;
+    // 2.放开这里的注释
+    /*if (!this.pdfViewer.currentScaleValue) {
       // Scale was not initialized: invalid bookmark or scale was not specified.
       // Setting the default one.
       this.pdfViewer.currentScaleValue = DEFAULT_SCALE_VALUE;
-    }
+    }*/
   },
 
   cleanup() {
@@ -1277,6 +1332,7 @@ let PDFViewerApplication = {
     eventBus.on('nextpage', webViewerNextPage);
     eventBus.on('previouspage', webViewerPreviousPage);
     eventBus.on('zoomin', webViewerZoomIn);
+    eventBus.on('zoom', webViewerZoom);
     eventBus.on('zoomout', webViewerZoomOut);
     eventBus.on('pagenumberchanged', webViewerPageNumberChanged);
     eventBus.on('scalechanged', webViewerScaleChanged);
@@ -1743,6 +1799,9 @@ function webViewerNextPage() {
 }
 function webViewerPreviousPage() {
   PDFViewerApplication.page--;
+}
+function webViewerZoom() {
+  PDFViewerApplication.zoom();
 }
 function webViewerZoomIn() {
   PDFViewerApplication.zoomIn();

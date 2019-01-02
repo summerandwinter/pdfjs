@@ -24,10 +24,15 @@ See https://github.com/adobe-type-tools/cmap-resources
   <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+    <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1, maximum-scale=1"/>
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"/>     
+    <meta content="yes" name="apple-mobile-web-app-capable"/>     
+    <meta content="black" name="apple-mobile-web-app-status-bar-style"/>     
+    <meta content="telephone=no" name="format-detection"/>
 <!--#if GENERIC-->
     <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
 <!--#endif-->
-    <title>文档阅读器</title>
+    <title>微法院干警端</title>
 
 <!--#if FIREFOX || MOZCENTRAL-->
 <!--#include viewer-snippet-firefox-extension.html-->
@@ -46,8 +51,9 @@ See https://github.com/adobe-type-tools/cmap-resources
 <!--#if !PRODUCTION-->
     <script src="../node_modules/systemjs/dist/system.js"></script>
     <script src="../systemjs.config.js"></script>
+    
 <!--#endif-->
-
+<script src="http://alloyteam.github.io/AlloyFinger/alloy_finger.js"></script>
 <!--#if (GENERIC && !MINIFIED) -->
 <!--#include viewer-snippet.html-->
 <!--#endif-->
@@ -60,18 +66,24 @@ See https://github.com/adobe-type-tools/cmap-resources
 
   </head>
 
-  <body tabindex="1" class="loadingInProgress" >
-    <div class="watermark">
+  <body tabindex="1" class="loadingInProgress">
+    <div class="watermark" id='isIPhoneX'>
       <div class="name" id="fullname"></div>
       <img src="images/watermark.png" />
     </div>
     <div id="load_img">
-      <div class="load_center">
-        <div class="load_header" id="load_header">正在提取您的文件...</div>
+      <!-- <div class="load_center">
+        <div class="load_header" id="load_header">连接办公系统中...</div>
         <div class="load_text" id="load_text">正在从服务器中检索您的文件，请稍候</div>
-       <!-- Loading image -->
-        <span role="presentation" align="absmiddle" class="BootSpinner"></span>
-      </div>
+       
+        <span role="0" align="absmiddle" class="BootSpinner"></span>
+      </div> -->
+        <div class="progress_percent">
+          <!--<progress percent="{{progress_percent}}" stroke-width="6" color="#19be6b"  />-->
+          <img class="loadingimg" src="images/loading.gif" />
+          <div class="tips ttip" ><p id='load_header'>连接办公系统中</p></div>
+          <div class="tips"><p id="load_text"></p></div>
+        </div>
     </div>
 
      <div id="errorWrapper" hidden='true'>

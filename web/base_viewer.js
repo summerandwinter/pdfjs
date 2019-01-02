@@ -419,6 +419,7 @@ class BaseViewer {
     // viewport for all pages
     firstPagePromise.then((pdfPage) => {
       let scale = this.currentScale;
+      console.log('base_viewer >> current scale:' + scale);
       let viewport = pdfPage.getViewport(scale * CSS_UNITS);
       for (let pageNum = 1; pageNum <= pagesCount; ++pageNum) {
         let textLayerFactory = null;

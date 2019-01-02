@@ -45,7 +45,7 @@ const defaultOptions = {
   },
   disableHistory: {
     /** @type {boolean} */
-    value: false,
+    value: true,
     kind: OptionKind.VIEWER,
   },
   disablePageLabels: {
@@ -113,7 +113,7 @@ const defaultOptions = {
   },
   showPreviousViewOnLoad: {
     /** @type {boolean} */
-    value: true,
+    value: false,
     kind: OptionKind.VIEWER,
   },
   sidebarViewOnLoad: {
@@ -150,7 +150,7 @@ const defaultOptions = {
   cMapUrl: {
     /** @type {string} */
     value: (typeof PDFJSDev === 'undefined' || !PDFJSDev.test('PRODUCTION') ?
-            '../external/bcmaps/' : 'cmaps/'),
+            '../external/bcmaps/' : '/cmaps/'),
     kind: OptionKind.API,
   },
   disableAutoFetch: {
@@ -212,7 +212,7 @@ const defaultOptions = {
   workerSrc: {
     /** @type {string} */
     value: (typeof PDFJSDev === 'undefined' || !PDFJSDev.test('PRODUCTION') ?
-            '../src/worker_loader.js' : 'build/pdf.worker.js'),
+            '../src/worker_loader.js' : '/build/pdf.worker.js'),
     kind: OptionKind.WORKER,
   },
 };
